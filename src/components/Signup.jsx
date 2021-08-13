@@ -1,7 +1,7 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext,useEffect } from 'react';
 import { AuthContext } from "../Context/AuthProvider";
-import { storage, database } from "../firebaseAuth/firebase";
-function Signup() {
+import { storage,database } from "../firebaseAuth/firebase";
+function Signup(props) {
     let [email, setEmail] = useState("");
     let [password, setPassword] = useState("");
     const [fullName, setfullName] = useState('');
@@ -26,17 +26,26 @@ function Signup() {
             setFile(file);
         // console.log(file)
     }
-    const handleSignup = () => {
+
+    useEffect(() => {
+        if (currentUser) {
+            // send to feed page
+            props.history.push('/feed');
+        }
+    });
+
+    const handleSignup = async () => {
         try {
             setError("");
             setLoginLoader(true);
             //    1. signup 
-            let userCredential =  genericSignup(email, password);
+            let userCredential = await genericSignup(email, password);
             let uid = userCredential.user.uid;
             // uid 
             console.log(uid);
             // 
             // user folder -> uid name file store
+            //start storage in firebase then refresh to see the changes
             const uploadListener = storage.ref("/users/" + uid).put(file);
             uploadListener.on("state_changed", onprogress, onerror, onsucess);
             function onprogress(snapshot) {
@@ -49,12 +58,16 @@ function Signup() {
             async function onsucess() {
                 // /url 
                 let downloadUrl = await uploadListener.snapshot.ref.getDownloadURL();
+                console.log(downloadUrl);
                 //3 . user create firestore 
                 database.users.doc(uid).set({
                     email: email,
-                    userId: uid,
                     fullName: fullName,
-                    profileUrl: downloadUrl
+                    profileUrl: downloadUrl,
+                    reels:[],
+                    likes:[],
+                    comments:[],
+                   // createdAt:database.createdAt.serverTimestamp(),
                 })
             }
         } catch (err) {
@@ -66,20 +79,22 @@ function Signup() {
     return (
         <div>
             <div>
-
                 <input type="email"
+                placeholder="email"
                     value={email}
                     onChange={handleEmail}
                 />
             </div>
             <div>
                 <input type="password"
+                placeholder="pass"
                     value={password}
                     onChange={handlePassword}
                 />
             </div>
             <div>
                 <input type="text"
+                placeholder="name"
                     value={fullName}
                     onChange={handleName}
                 />
@@ -91,8 +106,8 @@ function Signup() {
                 />
             </div>
             <div>
-                <input type="button" >
-                    SIGNUP
+                <input type="button" onClick={handleSignup} value="SIGNUP">
+                    
                 </input>
             </div>
 

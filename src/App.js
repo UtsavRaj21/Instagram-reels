@@ -30,9 +30,9 @@ function ProtectedRoute(props) {
   // console.log(props);
   // let Component = props.abc;
   let {currentUser} =useContext(AuthContext);
-  let component = props.abc;
+  let Component = props.abc;
   return (<Route {...props} render={(props) => {
-    return (currentUser ? <component {...props} ></component> : <Redirect to="/login"></Redirect>
+    return (currentUser ? <Component {...props} ></Component> : <Redirect to="/login"></Redirect>
     )
   }}></Route>
 
